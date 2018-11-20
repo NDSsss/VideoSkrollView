@@ -81,8 +81,8 @@ public class MainActivity extends AppCompatActivity implements ZoomLayout.IZoomC
             max = max/10000;
             if(max!=0)
             resizeView(line,1,100);
-            System.out.println("============================================================= MAX = " + max);
-            System.out.println("============================================================= LINE_W = " + line.getWidth());
+//            System.out.println("============================================================= MAX = " + max);
+//            System.out.println("============================================================= LINE_W = " + line.getWidth());
             line.setX(curProgress);
         };
         mHandler.postDelayed(runner, 1000);
@@ -104,9 +104,9 @@ public class MainActivity extends AppCompatActivity implements ZoomLayout.IZoomC
             public boolean onPreDraw() {
 
                 view.getViewTreeObserver().removeOnPreDrawListener(this);
-                Log.d(TAG, "X =================================== >" + view.getX());
-                Log.d(TAG, "scaleX =================================== >" + view.getScaleX());
-                Log.d(TAG, "cProgress =================================== >" + view.getScrollX());
+//                Log.d(TAG, "X =================================== >" + view.getX());
+//                Log.d(TAG, "scaleX =================================== >" + view.getScaleX());
+//                Log.d(TAG, "cProgress =================================== >" + view.getScrollX());
                 return true;
             }
         };
@@ -147,5 +147,10 @@ public class MainActivity extends AppCompatActivity implements ZoomLayout.IZoomC
     @Override
     public void setMaxScreenWidth(int width) {
         SCREEN_MAX_WITH = width;
+    }
+
+    @Override
+    public void secondClicked(float clickedSecond) {
+
     }
 }

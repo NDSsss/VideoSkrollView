@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -34,12 +35,18 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     }
 
     float max;
+    private float secsInDay = 86400;
 
     private Mode mode = Mode.NONE;
     private float scale = 1.0f;
     private float lastScaleFactor = 0f;
     private IZoomCallback mSetScale;
     private boolean getScreenWidth = false;
+    private float screenWidth=0;
+    private float scaledViewWidth = 0;
+    private float lastClick=1;
+    private float clickedSecond =1;
+    private int[] location = new int[2];
 
     // Where the finger first  touches the screen
     private float startX = 0f;
@@ -68,6 +75,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     private float prevDx = 0f;
     private float prevDy = 0f;
 
+    Paint paint = new Paint();
     public ZoomLayout(Context context) {
         super(context);
         init(context);
@@ -88,6 +96,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     }
 
     private void init(Context context) {
+        paint.setStrokeWidth(10);
         if(mSetScale!=null){
             mSetScale.setMaxScreenWidth(child().getWidth());
         }
@@ -95,24 +104,26 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         this.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                if(mSetScale!=null){
-                    mSetScale.setTouchX((int)motionEvent.getX());
-                }
                 switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
+                        if(mSetScale!=null){
+                            mSetScale.setTouchX((int)motionEvent.getX());
+                        }
                         Log.i(TAG, "DOWN");
                         if (scale > MIN_ZOOM) {
                             mode = Mode.DRAG;
                             startX = motionEvent.getX() - prevDx;
+                            lastClick = motionEvent.getX();
                             startY = motionEvent.getY() - prevDy;
+                            Log.d(TAG, "DOWN TO SCALE startX "+startX+" motionEvent.getX() "+motionEvent.getX()+" prevDx "+prevDx);
                         }
                         break;
                     case MotionEvent.ACTION_MOVE:
                         if (mode == Mode.DRAG) {
                             dx = motionEvent.getX() - startX;
                             dy = motionEvent.getY() - startY;
+                            Log.d(TAG, "MOVE stratx " +String.valueOf(startX)+" dx "+String.valueOf(dx)+" motion x "+String.valueOf(motionEvent.getX()));
                         }
-                        Log.d(TAG, "MOVE stratx " +String.valueOf(startX)+" dx "+String.valueOf(dx));
                         break;
                     case MotionEvent.ACTION_POINTER_DOWN:
                         mode = Mode.ZOOM;
@@ -125,6 +136,11 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
                         mode = Mode.NONE;
                         prevDx = dx;
                         prevDy = dy;
+                        if(mSetScale!=null){
+                            lastClick =motionEvent.getX();
+                            calculateClickedSecond();
+                            mSetScale.secondClicked(clickedSecond);
+                        }
                         break;
                 }
                 scaleDetector.onTouchEvent(motionEvent);
@@ -139,8 +155,8 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
                     }
                     dx = Math.min(Math.max(dx, -maxDx), maxDx);
                     dy = Math.min(Math.max(dy, -maxDy), maxDy);
-                    Log.i(TAG, "Width: " + child().getWidth() + ", scale " + scale + ", dx " + dx
-                            + ", max " + maxDx);
+//                    Log.i(TAG, "Width: " + child().getWidth() + ", scale " + scale + ", dx " + dx
+//                            + ", max " + maxDx);
                     applyScaleAndTranslation();
                 }
 
@@ -166,6 +182,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
             scale *= scaleFactor;
             scale = Math.max(MIN_ZOOM, Math.min(scale, MAX_ZOOM));
             lastScaleFactor = scaleFactor;
+            scaledViewWidth = (int)(screenWidth*scale);
             if(mSetScale!=null){
                 mSetScale.setScale(scale);
             }
@@ -184,7 +201,31 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         child().setScaleX(scale);
 //        child().setScaleY(scale);
         child().setTranslationX(dx);
+        child().getLocationOnScreen(location);
+        Log.d(TAG, "child().getLocationOnScreen(location) "+String.valueOf(location[0])+" "+String.valueOf(location[1]));
+        Log.d(TAG, "scaledViewWidth: "+scaledViewWidth);
+        Log.d(TAG, "screenWidth: "+screenWidth);
+        calculateClickedSecond();
+
+
+
 //        child().setTranslationY(dy);
+    }
+
+    void calculateClickedSecond(){
+        float stastVisibleX = -location[0]+1;
+        float endVisibleX =screenWidth + stastVisibleX-1;
+        float startVisiblePercent = stastVisibleX/scaledViewWidth;
+        float endVisiblePercent = endVisibleX/scaledViewWidth;
+        Log.d(TAG, "stastVisibleX: "+stastVisibleX+" endVisibleX "+endVisibleX);
+        Log.d(TAG, "startVisiblePercent: "+startVisiblePercent+" endVisiblePercent "+endVisiblePercent);
+        float startVisibleSec = secsInDay * startVisiblePercent;
+        float endVisibleSec = secsInDay * endVisiblePercent;
+        Log.d(TAG, "startVisibleSec: "+startVisibleSec+" endVisibleSec "+endVisibleSec);
+        float visibleSecs = endVisibleSec - (int)startVisibleSec;
+        Log.d(TAG, "visibleSecs: "+visibleSecs);
+        clickedSecond = startVisibleSec + (visibleSecs * (lastClick/screenWidth));
+        Log.d(TAG, "clickedSecond: "+clickedSecond);
     }
 
     private View child() {
@@ -196,10 +237,13 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         void setTouchX(int x);
         void setMaxX(int maxX);
         void setMaxScreenWidth(int width);
+        void secondClicked(float clickedSecond);
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        screenWidth = getWidth();
+        scaledViewWidth =screenWidth*scale;
         super.onLayout(changed, left, top, right, bottom);
     }
 
@@ -209,14 +253,17 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     }
 
 
-    Paint paint = new Paint();
 
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         // толщина линии = 10
-        paint.setStrokeWidth(10);
-        canvas.drawLine(0,0,50,100,paint);
+
+    }
+
+    @Override
+    protected void measureChildren(int widthMeasureSpec, int heightMeasureSpec) {
+        super.measureChildren(widthMeasureSpec, heightMeasureSpec);
     }
 }
