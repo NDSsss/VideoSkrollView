@@ -1,11 +1,6 @@
 package com.example.nds.videoscrollview;
 
 public class DayTime {
-    public static final int THREE_HOURS = 1;
-    public static final int ONE_HOUR = 2;
-    public static final int HALF_HOUR = 3;
-    public static final int FIFTEEN_MINUTES = 4;
-    public static final int FIVE_MINUTES = 5;
     public final static int SECS_IN_TIME = 86400;
 
     private int zoomLevel = 1;

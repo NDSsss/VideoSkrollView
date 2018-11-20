@@ -51,41 +51,11 @@ public class MainActivity extends AppCompatActivity implements ZoomLayout.IZoomC
     protected void onCreate(Bundle savedInstanceState) {
         mHandler = new Handler();
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.main_view);
-//      constr = (ConstraintLayout)findViewById(R.id.constraint);
         line = findViewById(R.id.view_progress_line);
         zoomLayout =(ZoomLayout) findViewById(R.id.main_zoom);
         zoomLayout.setISetScaleListener(this);
-//        zoomLayout.setISetScaleListener(this);
-//        constr.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                Log.d("touch", "onTouch: "+event);
-//                return false;
-//            }
-//        });
-
         et1 = (TextView)findViewById(R.id.tv_info);
-//        et2 = (TextView)findViewById(R.id.et2);
-//        et3 = (TextView)findViewById(R.id.et3);
-//        et4 = (TextView)findViewById(R.id.et4);
-//        llContainer1 = (LinearLayout)findViewById(R.id.container1);
-//        llContainer2 = (LinearLayout)findViewById(R.id.container2);
-//        llContainer3 = (LinearLayout)findViewById(R.id.container3);
-
-        runner = () -> {
-            mHandler.postDelayed(runner, 1000);
-            curProgress ++;
-            max = (int) zoomLayout.getMax();
-            max = max/10000;
-            if(max!=0)
-            resizeView(line,1,100);
-//            System.out.println("============================================================= MAX = " + max);
-//            System.out.println("============================================================= LINE_W = " + line.getWidth());
-            line.setX(curProgress);
-        };
-        mHandler.postDelayed(runner, 1000);
     }
 
     private void resizeView(View view, int newWidth, int newHeight) {

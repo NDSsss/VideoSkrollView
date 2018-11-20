@@ -6,4 +6,5 @@
     <color name="colorHorizontalFrontLine">#39434f</color>
     <color name="colorVerticalDividerLine">#8093ab</color>
     <color name="colorHorizontalBackLine">#232f40</color>
+    <color name="white">#fff</color>
 </resources>

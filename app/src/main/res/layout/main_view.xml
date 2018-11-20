@@ -5,51 +5,16 @@
 
     <com.example.nds.videoscrollview.ZoomLayout
         android:id="@+id/main_zoom"
-        android:layout_marginTop="6dp"
         android:layout_width="match_parent"
         android:layout_height="100dp">
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="6dp"
-                android:layout_marginStart="6dp"
-                android:background="@color/colorHorizontalBackLine" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="30dp"
-                android:layout_marginBottom="30dp"
-                android:layout_marginEnd="6dp"
-                android:layout_marginStart="6dp"
-                android:background="@color/colorHorizontalFrontLine" />
-
-
-
             <com.example.nds.videoscrollview.ProgressLineView
                 android:id="@+id/view_progress_line"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 />
-
-            <com.example.nds.videoscrollview.HorizontalDividerLineView
-                android:id="@+id/view_divider_lines"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                />
-
-
-            <View
-                android:layout_centerHorizontal="true"
-                android:id="@+id/view_divider_line"
-                android:layout_width="1dp"
-                android:layout_height="100dp"
-                android:background="@color/colorVerticalDividerLine" />
-
         </RelativeLayout>
 
     </com.example.nds.videoscrollview.ZoomLayout>
