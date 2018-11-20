@@ -85,17 +85,6 @@ public class MainActivity extends AppCompatActivity implements ZoomLayout.IZoomC
 
     @Override
     public void setScale(float scale) {
-//        mScale = scale;
-//        if(et1!=null) {
-//            et1.setText(String.valueOf(mScale));
-//        }
-//        et2.setText(String.valueOf(mScale));
-//        et3.setText(String.valueOf(mScale));
-//        et4.setText(String.valueOf(mScale));
-//        if(mScale>2&&!changed){
-//            llContainer1.removeAllViews();
-//            llContainer1.addView(new OneHourView(getApplicationContext()));
-//            changed = true;
 //        }
 
         mScale = scale;

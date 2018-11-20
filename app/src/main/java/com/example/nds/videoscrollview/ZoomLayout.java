@@ -71,22 +71,6 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     private float dx = 0f;
     private float dy = 0f;
 
-    public float getDx() {
-        return dx;
-    }
-
-    public float getDy() {
-        return dy;
-    }
-
-    public float getPrevDx() {
-        return prevDx;
-    }
-
-    public float getPrevDy() {
-        return prevDy;
-    }
-
     private float prevDx = 0f;
     private float prevDy = 0f;
 
@@ -227,11 +211,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         Log.d(TAG, "scaledViewWidth: " + scaledViewWidth);
         Log.d(TAG, "screenWidth: " + screenWidth);
         calculateClickedSecond();
-
         invalidate();
-
-
-//        child().setTranslationY(dy);
     }
 
     void calculateClickedSecond() {
@@ -302,7 +282,6 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        // толщина линии = 10
         canvas.drawColor(getResources().getColor(R.color.colorHorizontalBackLine));
         canvas.drawRect(0, getHeight()/3, scaledViewWidth, getHeight()/3*2, paint);
         paintTime.setStrokeWidth((5/scale)<3?3:(5/scale));
@@ -335,10 +314,6 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
             return mZoomLevel;
         }
 
-        public void setZoomLevel(int zoomLevel) {
-            this.mZoomLevel = zoomLevel;
-        }
-
         public boolean isVisible() {
             return visible;
         }
@@ -349,10 +324,6 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
 
         public int getSecond() {
             return second;
-        }
-
-        public void setSecond(int second) {
-            this.second = second;
         }
 
         public int getVisibleXPos() {
