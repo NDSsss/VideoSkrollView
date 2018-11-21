@@ -29,87 +29,34 @@ import static android.os.Build.VERSION_CODES.O;
 
 public class MainActivity extends AppCompatActivity implements ZoomLayout.IZoomCallback{
 
-    private ConstraintLayout constr;
-    private View container;
     private ZoomLayout zoomLayout;
-    private float mScale,mMaxX;
-    private int SCREEN_MAX_WITH;
-    public  ProgressLineView progressLineView;
-    private TextView et1,et2,et3,et4;
-    private LinearLayout llContainer1,llContainer2,llContainer3;
-    private boolean changed = false;
-    private Handler mHandler;
-    private Runnable runner;
-    int curProgress = 0;
-    public int max = 0;
-    public ViewUtils viewUtils;
-    public ViewGroupUtils viewGroupUtils;
-    View line;
-    private static final String TAG = "MainView: ";
+    private float mScale;
+    private TextView et1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mHandler = new Handler();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_view);
-        line = findViewById(R.id.view_progress_line);
         zoomLayout =(ZoomLayout) findViewById(R.id.main_zoom);
         zoomLayout.setISetScaleListener(this);
         et1 = (TextView)findViewById(R.id.tv_info);
     }
 
-    private void resizeView(View view, int newWidth, int newHeight) {
-        try {
-            Constructor<? extends ViewGroup.LayoutParams> ctor = view.getLayoutParams().getClass().getDeclaredConstructor(int.class, int.class);
-
-            view.setLayoutParams(ctor.newInstance(newWidth, view.getHeight()));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void runJustBeforeBeingDrawn(final View view) {
-        final ViewTreeObserver.OnPreDrawListener preDrawListener = new ViewTreeObserver.OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-
-                view.getViewTreeObserver().removeOnPreDrawListener(this);
-//                Log.d(TAG, "X =================================== >" + view.getX());
-//                Log.d(TAG, "scaleX =================================== >" + view.getScaleX());
-//                Log.d(TAG, "cProgress =================================== >" + view.getScrollX());
-                return true;
-            }
-        };
-        view.getViewTreeObserver().addOnPreDrawListener(preDrawListener);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        zoomLayout.setProgress(ZoomLayout.SECS_IN_TIME/2);
     }
 
     @Override
     public void setScale(float scale) {
-//        }
-
         mScale = scale;
-
-    }
-
-    @Override
-    public void setTouchX(int x) {
-        et1.setText("click x "+String.valueOf(x));
-    }
-
-    @Override
-    public void setMaxX(int maxX) {
-        mMaxX = maxX;
-        et1.setText("Scale "+String.valueOf(mScale)+" MaxX "+String.valueOf(maxX));
-    }
-
-
-    @Override
-    public void setMaxScreenWidth(int width) {
-        SCREEN_MAX_WITH = width;
+        et1.setText("Scale "+String.valueOf(mScale));
     }
 
     @Override
     public void secondClicked(float clickedSecond) {
+        et1.setText("Clicked on "+clickedSecond+" second");
 
     }
 }

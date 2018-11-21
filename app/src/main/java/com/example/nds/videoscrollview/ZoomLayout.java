@@ -19,6 +19,15 @@ import java.util.ArrayList;
  * view containing the content.
  */
 public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnScaleGestureListener {
+    /**
+     * Max allowed duration for a "click", in milliseconds.
+     */
+    private static final int MAX_CLICK_DURATION = 250;
+
+    /**
+     * Max allowed distance to move during a "click", in DP.
+     */
+    private static final int MAX_CLICK_DISTANCE = 15;
     private static final String[] THRE_HOURS_VALUES = {"00:00","03:00","06:00","09:00","12:00","15:00","18:00","21:00","27:00"};
     private static final String[] ONE_HOUR_VALUES = {"00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00",
                                                     "10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00","24:00"};
@@ -135,6 +144,13 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     private int[] location = new int[2];
     private ThreeHoursZoom threezoom;
     private ArrayList<Devider> visibleDevisers;
+    private long pressStartTime;
+    private float pressedX;
+    private float pressedY;
+    private int currentProgress=0;
+    float endVisibleSec=SECS_IN_TIME;
+    float startVisibleSec = 0f;
+    private ProgressCursor progressCursor;
 
     // Where the finger first  touches the screen
     private float startX = 0f;
@@ -149,6 +165,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
 
     Paint paint = new Paint();
     Paint paintTime = new Paint();
+    Paint paintProgress = new Paint();
 
     public ZoomLayout(Context context) {
         super(context);
@@ -169,6 +186,12 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         mSetScale = setScaleListener;
     }
 
+    public void setProgress(int progress){
+        currentProgress = progress;
+        progressCursor.init(progress);
+
+    }
+
     private void init(Context context) {
         threezoom = new ThreeHoursZoom();
         setWillNotDraw(false);
@@ -176,19 +199,21 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         paint.setStrokeWidth(33);
         paintTime.setColor(getResources().getColor(R.color.white));
         paintTime.setTextAlign(Paint.Align.CENTER);
-        paintTime.setTextSize(35);
-        if (mSetScale != null) {
-            mSetScale.setMaxScreenWidth(child().getWidth());
-        }
+        paintTime.setTextSize(30);
+        paintProgress.setColor(getResources().getColor(R.color.colorAccent));
+        threezoom.checkVisebility(0,SECS_IN_TIME);
+        visibleDevisers = threezoom.getVisibleDeviders(getZoomLevel(0,SECS_IN_TIME));
+        progressCursor = new ProgressCursor();
+        progressCursor.init(SECS_IN_TIME/2);
         final ScaleGestureDetector scaleDetector = new ScaleGestureDetector(context, this);
         this.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
-                        if (mSetScale != null) {
-                            mSetScale.setTouchX((int) motionEvent.getX());
-                        }
+                        pressStartTime = System.currentTimeMillis();
+                        pressedX = motionEvent.getX();
+                        pressedY = motionEvent.getY();
                         Log.i(TAG, "DOWN");
                         if (scale > MIN_ZOOM) {
                             mode = Mode.DRAG;
@@ -216,10 +241,13 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
                         mode = Mode.NONE;
                         prevDx = dx;
                         prevDy = dy;
-                        if (mSetScale != null) {
-                            lastClick = motionEvent.getX();
-                            calculateClickedSecond();
-                            mSetScale.secondClicked(clickedSecond);
+                        long pressDuration = System.currentTimeMillis() - pressStartTime;
+                        if (pressDuration < MAX_CLICK_DURATION && distance(pressedX, pressedY, motionEvent.getX(), motionEvent.getY()) < MAX_CLICK_DISTANCE) {
+                            if (mSetScale != null) {
+                                lastClick = motionEvent.getX();
+                                calculateClickedSecond();
+                                mSetScale.secondClicked(clickedSecond);
+                            }
                         }
                         break;
                 }
@@ -230,9 +258,6 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
                     float maxDx = (child().getWidth() - (child().getWidth() / scale)) / 2 * scale;
                     max = maxDx;
                     float maxDy = (child().getHeight() - (child().getHeight() / scale)) / 2 * scale;
-                    if (mSetScale != null) {
-                        mSetScale.setMaxX((int) maxDx);
-                    }
                     dx = Math.min(Math.max(dx, -maxDx), maxDx);
                     dy = Math.min(Math.max(dy, -maxDy), maxDy);
 //                    Log.i(TAG, "Width: " + child().getWidth() + ", scale " + scale + ", dx " + dx
@@ -244,7 +269,16 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
             }
         });
     }
+    private float distance(float x1, float y1, float x2, float y2) {
+        float dx = x1 - x2;
+        float dy = y1 - y2;
+        float distanceInPx = (float) Math.sqrt(dx * dx + dy * dy);
+        return pxToDp(distanceInPx);
+    }
 
+    private float pxToDp(float px) {
+        return px / getResources().getDisplayMetrics().density;
+    }
 
     // ScaleGestureDetector
 
@@ -296,9 +330,10 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         float endVisiblePercent = endVisibleX / scaledViewWidth;
         Log.d(TAG, "stastVisibleX: " + stastVisibleX + " endVisibleX " + endVisibleX);
         Log.d(TAG, "startVisiblePercent: " + startVisiblePercent + " endVisiblePercent " + endVisiblePercent);
-        float startVisibleSec = secsInDay * startVisiblePercent;
-        float endVisibleSec = secsInDay * endVisiblePercent;
+        startVisibleSec = secsInDay * startVisiblePercent;
+        endVisibleSec = secsInDay * endVisiblePercent;
         threezoom.checkVisebility(startVisibleSec,endVisibleSec);
+        progressCursor.init(currentProgress);
         visibleDevisers = threezoom.getVisibleDeviders(getZoomLevel(startVisibleSec,endVisibleSec));
         Log.d(TAG, "startVisibleSec: " + startVisibleSec + " endVisibleSec " + endVisibleSec);
         float visibleSecs = endVisibleSec - (int) startVisibleSec;
@@ -330,13 +365,6 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
 
     public interface IZoomCallback {
         void setScale(float scale);
-
-        void setTouchX(int x);
-
-        void setMaxX(int maxX);
-
-        void setMaxScreenWidth(int width);
-
         void secondClicked(float clickedSecond);
     }
 
@@ -348,11 +376,6 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         super.onLayout(changed, left, top, right, bottom);
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -360,6 +383,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         canvas.drawColor(getResources().getColor(R.color.colorHorizontalBackLine));
         canvas.drawRect(0, getHeight()/3, scaledViewWidth, getHeight()/3*2, paint);
         paintTime.setStrokeWidth((5/scale)<3?3:(5/scale));
+        paintProgress.setStrokeWidth((10/scale)<7?7:(10/scale));
 //        canvas.drawLine(scaledViewWidth/8*2,0,scaledViewWidth/8*2,getHeight(),paintTime);
         if(visibleDevisers!=null) {
             for (int i = 0; i < visibleDevisers.size(); i++) {
@@ -368,11 +392,11 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
             }
         }
 
-    }
+        if(progressCursor.isVisible()){
+            canvas.drawLine(progressCursor.getPosX(),0,progressCursor.getPosX(),getHeight(),paintProgress);
+        }
 
-    @Override
-    protected void measureChildren(int widthMeasureSpec, int heightMeasureSpec) {
-        super.measureChildren(widthMeasureSpec, heightMeasureSpec);
+
     }
 
     private class Devider{
@@ -464,5 +488,34 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
             return result;
         }
 
+    }
+
+    private class ProgressCursor{
+        private boolean isVisible;
+        private float posX;
+        public void init(float progress){
+            if(progress>=startVisibleSec&&progress<=endVisibleSec){
+                isVisible = true;
+                posX = (screenWidth*(progress - startVisibleSec)/(endVisibleSec-startVisibleSec));
+            } else {
+                isVisible = false;
+            }
+        }
+
+        public boolean isVisible() {
+            return isVisible;
+        }
+
+        public void setVisible(boolean visible) {
+            isVisible = visible;
+        }
+
+        public float getPosX() {
+            return posX;
+        }
+
+        public void setPosX(float posX) {
+            this.posX = posX;
+        }
     }
 }
