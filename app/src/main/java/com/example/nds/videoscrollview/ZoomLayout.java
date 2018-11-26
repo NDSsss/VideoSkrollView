@@ -359,6 +359,13 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         return 0;
     }
 
+
+
+    public void init(){
+        applyScaleAndTranslation();
+        invalidate();
+    }
+
     private View child() {
         return getChildAt(0);
     }
@@ -374,8 +381,8 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         screetHeight = getHeight();
         scaledViewWidth = screenWidth * scale;
         super.onLayout(changed, left, top, right, bottom);
+        init();
     }
-
 
     @Override
     protected void onDraw(Canvas canvas) {
