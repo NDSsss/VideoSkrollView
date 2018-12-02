@@ -394,8 +394,13 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
 //        canvas.drawLine(scaledViewWidth/8*2,0,scaledViewWidth/8*2,getHeight(),paintTime);
         if(visibleDevisers!=null) {
             for (int i = 0; i < visibleDevisers.size(); i++) {
-                canvas.drawLine(visibleDevisers.get(i).getVisibleXPos(), getHeight()/3, visibleDevisers.get(i).getVisibleXPos(), getHeight(), paintTime);
-                canvas.drawText(visibleDevisers.get(i).getTime(),visibleDevisers.get(i).getVisibleXPos(),getHeight()/3,paintTime);
+                if(visibleDevisers.get(i).getTime().endsWith("00")) {
+                    canvas.drawLine(visibleDevisers.get(i).getVisibleXPos(), getHeight() / 6, visibleDevisers.get(i).getVisibleXPos(), getHeight() / 6 * 5, paintTime);
+                    canvas.drawText(visibleDevisers.get(i).getTime(), visibleDevisers.get(i).getVisibleXPos(), getHeight() / 6, paintTime);
+                } else {
+                    canvas.drawLine(visibleDevisers.get(i).getVisibleXPos(), getHeight() / 3, visibleDevisers.get(i).getVisibleXPos(), getHeight() / 3 * 2, paintTime);
+                    canvas.drawText(visibleDevisers.get(i).getTime(), visibleDevisers.get(i).getVisibleXPos(), getHeight() / 3, paintTime);
+                }
             }
         }
 
