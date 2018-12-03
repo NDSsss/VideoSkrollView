@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -151,6 +150,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     float endVisibleSec=SECS_IN_TIME;
     float startVisibleSec = 0f;
     private ProgressCursor progressCursor;
+    private RedLines redLines;
 
     // Where the finger first  touches the screen
     private float startX = 0f;
@@ -166,6 +166,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     Paint paint = new Paint();
     Paint paintTime = new Paint();
     Paint paintProgress = new Paint();
+    Paint paintRedLines = new Paint();
 
     public ZoomLayout(Context context) {
         super(context);
@@ -186,6 +187,20 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         mSetScale = setScaleListener;
     }
 
+    public void setRedLi(ArrayList<Integer> redSeconds){
+        int startSec = redSeconds.get(0);
+        ArrayList<RedLine> redLi= new ArrayList<>();
+        for(int i = 1; i < redSeconds.size(); i++){
+            if(redSeconds.get(i)-redSeconds.get(i-1)>1){
+                redLi.add(new RedLine(startSec,redSeconds.get(i-1)));
+                startSec = redSeconds.get(i);
+            }
+        }
+        redLines = new RedLines(redLi);
+    }
+
+
+
     public void setProgress(int progress){
         currentProgress = progress;
         progressCursor.init(progress);
@@ -195,12 +210,16 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     private void init(Context context) {
         threezoom = new ThreeHoursZoom();
         setWillNotDraw(false);
+        if(mSetScale!=null){
+            setRedLi(mSetScale.getRedLines());
+        }
         paint.setColor(getResources().getColor(R.color.colorHorizontalFrontLine));
         paint.setStrokeWidth(33);
         paintTime.setColor(getResources().getColor(R.color.white));
         paintTime.setTextAlign(Paint.Align.CENTER);
         paintTime.setTextSize(30);
         paintProgress.setColor(getResources().getColor(R.color.colorAccent));
+        paintRedLines.setColor(Color.RED);
         threezoom.checkVisebility(0,SECS_IN_TIME);
         visibleDevisers = threezoom.getVisibleDeviders(getZoomLevel(0,SECS_IN_TIME));
         progressCursor = new ProgressCursor();
@@ -334,6 +353,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         endVisibleSec = secsInDay * endVisiblePercent;
         threezoom.checkVisebility(startVisibleSec,endVisibleSec);
         progressCursor.init(currentProgress);
+        redLines.checkVisibleRedLines(startVisibleSec,endVisibleSec);
         visibleDevisers = threezoom.getVisibleDeviders(getZoomLevel(startVisibleSec,endVisibleSec));
         Log.d(TAG, "startVisibleSec: " + startVisibleSec + " endVisibleSec " + endVisibleSec);
         float visibleSecs = endVisibleSec - (int) startVisibleSec;
@@ -373,6 +393,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     public interface IZoomCallback {
         void setScale(float scale);
         void secondClicked(float clickedSecond);
+        ArrayList<Integer> getRedLines();
     }
 
     @Override
@@ -390,6 +411,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         canvas.drawColor(getResources().getColor(R.color.colorHorizontalBackLine));
         canvas.drawRect(0, getHeight()/3, scaledViewWidth, getHeight()/3*2, paint);
         paintTime.setStrokeWidth((5/scale)<3?3:(5/scale));
+        paintRedLines.setStrokeWidth(1);
         paintProgress.setStrokeWidth((10/scale)<7?7:(10/scale));
 //        canvas.drawLine(scaledViewWidth/8*2,0,scaledViewWidth/8*2,getHeight(),paintTime);
         if(visibleDevisers!=null) {
@@ -401,6 +423,15 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
                     canvas.drawLine(visibleDevisers.get(i).getVisibleXPos(), getHeight() / 3, visibleDevisers.get(i).getVisibleXPos(), getHeight() / 3 * 2, paintTime);
                     canvas.drawText(visibleDevisers.get(i).getTime(), visibleDevisers.get(i).getVisibleXPos(), getHeight() / 3, paintTime);
                 }
+            }
+        }
+
+        if(redLines.getVisibleRedLines()!=null){
+            for(int i =0; i< redLines.getVisibleRedLines().size();i++){
+                canvas.drawRect(redLines.getVisibleRedLines().get(i).getStartXPos(),getHeight() / 3,
+//                        redLines.getVisibleRedLines().get(i).getEndSec()-redLines.getVisibleRedLines().get(i).getStartSec()<1?redLines.getVisibleRedLines().get(i).getEndSec()+1:redLines.getVisibleRedLines().get(i).getEndSec(),
+                        redLines.getVisibleRedLines().get(i).getEndXPos(),
+                        getHeight()/3*2,paintRedLines);
             }
         }
 
@@ -529,5 +560,108 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         public void setPosX(float posX) {
             this.posX = posX;
         }
+    }
+
+    private class RedLine{
+        private float startSec;
+        private float endSec;
+        private float startXPos;
+        private float endXPos;
+
+        public RedLine(float startSec, float endSec){
+            this.startSec = startSec;
+            this.endSec = endSec;
+        }
+
+        public float getStartSec() {
+            return startSec;
+        }
+
+        public void setStartSec(float startSec) {
+            this.startSec = startSec;
+        }
+
+        public float getEndSec() {
+            return endSec;
+        }
+
+        public void setEndSec(float endSec) {
+            this.endSec = endSec;
+        }
+
+        public float getStartXPos() {
+            return startXPos;
+        }
+
+        public void setStartXPos(float startXPos) {
+            this.startXPos = startXPos;
+        }
+
+        public float getEndXPos() {
+            return endXPos;
+        }
+
+        public void setEndXPos(float endXPos) {
+            this.endXPos = endXPos;
+        }
+    }
+
+    private class RedLines{
+        private ArrayList<RedLine> redLi;
+        private ArrayList<RedLine> visibleRedLi;
+
+        public RedLines(ArrayList<RedLine> lines){
+            redLi = lines;
+            visibleRedLi = new ArrayList<>();
+        }
+
+        public ArrayList<RedLine> getVisibleRedLines() {
+            return visibleRedLi;
+        }
+        /*
+        public void checkVisebility(float startSec, float endSec){
+            for(int i=0; i < deviders.size();i++){
+                if(deviders.get(i).getSecond()>=startSec&&deviders.get(i).getSecond()<=endSec){
+                    deviders.get(i).setVisible(true);
+                    deviders.get(i).setVisibleXPos((int)(screenWidth*(deviders.get(i).getSecond() - startSec)/(endSec-startSec)));
+                } else {
+                    deviders.get(i).setVisible(false);
+                }
+            }
+        }
+         */
+
+        private ArrayList<RedLine> getVisibleRedLines(float startVisibleSec, float endVisibleSec){
+            ArrayList<RedLine> visibleRedLines = new ArrayList<>();
+            RedLine tempLine;
+            for(int i = 0; i< redLi.size(); i++){
+                if(redLi.get(i).getStartSec()>startVisibleSec){
+                    if(redLi.get(i).getEndSec()<endVisibleSec) {
+                        tempLine = redLi.get(i);
+                        tempLine.setStartXPos(screenWidth*(tempLine.getStartSec()-startVisibleSec)/(endVisibleSec-startVisibleSec));
+                        tempLine.setEndXPos(screenWidth*(tempLine.getEndSec()-startVisibleSec)/(endVisibleSec-startVisibleSec));
+                        visibleRedLines.add(tempLine);
+                    } else {
+                        tempLine = redLi.get(i);
+                        tempLine.setStartXPos(screenWidth*(tempLine.getStartSec()-startVisibleSec)/(endVisibleSec-startVisibleSec));
+                        tempLine.setEndXPos(screenWidth);
+                        visibleRedLines.add(tempLine);
+                    }
+                } else {
+                    if(redLi.get(i).getEndSec()<endVisibleSec&& redLi.get(i).getEndSec()>startVisibleSec){
+                        tempLine = redLi.get(i);
+                        tempLine.setStartXPos(0);
+                        tempLine.setEndXPos(screenWidth*(tempLine.getEndSec()-startVisibleSec)/(endVisibleSec-startVisibleSec));
+                        visibleRedLines.add(tempLine);
+                    }
+                }
+            }
+            return visibleRedLines;
+        }
+
+        public void checkVisibleRedLines(float startSec, float endSec){
+            visibleRedLi = getVisibleRedLines(startSec,endSec);
+        }
+
     }
 }
