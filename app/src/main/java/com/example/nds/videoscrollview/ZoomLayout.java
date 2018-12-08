@@ -108,17 +108,12 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
             "22:00", "22:05", "22:10", "22:15", "22:20", "22:25", "22:30", "22:35", "22:40", "22:45", "22:50", "22:55",
             "23:00", "23:05", "23:10", "23:15", "23:20", "23:25", "23:30", "23:35", "23:40", "23:45", "23:50", "23:55",
             "24:00"};
-    public final static int SECS_IN_TIME = 86400;
+    public final static int SECS_IN_DAY = 86400;
     public static final int THREE_HOURS = 1;
     public static final int ONE_HOUR = 2;
     public static final int HALF_HOUR = 3;
     public static final int FIFTEEN_MINUTES = 4;
     public static final int FIVE_MINUTES = 5;
-    public static final int THREE_HOURS_LEVEL = SECS_IN_TIME;
-    public static final int ONE_HOUR_LEVEL = THREE_HOURS_LEVEL/3;
-    public static final int HALF_HOUR_LEVEL = ONE_HOUR_LEVEL/2;
-    public static final int FIFTEEN_MINUTES_LEVEL = HALF_HOUR_LEVEL/2;
-    public static final int FIVE_MINUTES_LEVEL = FIFTEEN_MINUTES_LEVEL/3;
 
     private enum Mode {
         NONE,
@@ -130,7 +125,13 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     private static final float MIN_ZOOM = 1f;
     private static final float MAX_ZOOM = 55.0f;
     float max;
-    private float secsInDay = SECS_IN_TIME;
+    private int extraStartSecs = SECS_IN_DAY / 24 * 3, extraEndSecs = SECS_IN_DAY / 24 * 3;
+    private float secsInView = SECS_IN_DAY + extraEndSecs + extraStartSecs;
+    private int THREE_HOURS_LEVEL = (int) secsInView;
+    private int ONE_HOUR_LEVEL = THREE_HOURS_LEVEL / 3;
+    private int HALF_HOUR_LEVEL = ONE_HOUR_LEVEL / 2;
+    private int FIFTEEN_MINUTES_LEVEL = HALF_HOUR_LEVEL / 2;
+    private int FIVE_MINUTES_LEVEL = FIFTEEN_MINUTES_LEVEL / 3;
     private Mode mode = Mode.NONE;
     private float scale = 1.0f;
     private float lastScaleFactor = 0f;
@@ -148,7 +149,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     private float pressedX;
     private float pressedY;
     private int currentProgress = 0;
-    float endVisibleSec = SECS_IN_TIME;
+    float endVisibleSec = SECS_IN_DAY;
     float startVisibleSec = 0f;
     private ProgressCursor progressCursor;
     private RedLines redLines;
@@ -221,10 +222,10 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         paintTime.setTextSize(30);
         paintProgress.setColor(getResources().getColor(R.color.colorAccent));
         paintRedLines.setColor(Color.RED);
-        threezoom.checkVisebility(0, SECS_IN_TIME);
-        visibleDevisers = threezoom.getVisibleDeviders(getZoomLevel(0, SECS_IN_TIME));
+        threezoom.checkVisebility(0, SECS_IN_DAY);
+        visibleDevisers = threezoom.getVisibleDeviders(getZoomLevel(0, SECS_IN_DAY));
         progressCursor = new ProgressCursor();
-        progressCursor.init(SECS_IN_TIME / 2);
+        progressCursor.init(SECS_IN_DAY / 2);
         final ScaleGestureDetector scaleDetector = new ScaleGestureDetector(context, this);
         this.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -351,8 +352,8 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
         float endVisiblePercent = endVisibleX / scaledViewWidth;
         Log.d(TAG, "stastVisibleX: " + stastVisibleX + " endVisibleX " + endVisibleX);
         Log.d(TAG, "startVisiblePercent: " + startVisiblePercent + " endVisiblePercent " + endVisiblePercent);
-        startVisibleSec = secsInDay * startVisiblePercent;
-        endVisibleSec = secsInDay * endVisiblePercent;
+        startVisibleSec = secsInView * startVisiblePercent;
+        endVisibleSec = secsInView * endVisiblePercent;
         threezoom.checkVisebility(startVisibleSec, endVisibleSec);
         progressCursor.init(currentProgress);
         redLines.checkVisibleRedLines(startVisibleSec, endVisibleSec);
@@ -496,20 +497,62 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
 
         public ThreeHoursZoom() {
             deviders = new ArrayList<>();
+            int secsInThreeHours = SECS_IN_DAY / (THRE_HOURS_VALUES.length - 1);
+            int secsInOneHour = SECS_IN_DAY / (ONE_HOUR_VALUES.length - 1);
+            int secsInHalfHour = SECS_IN_DAY / (HALF_HOUR_VALUES.length - 1);
+            int secsInFifteenMinutes = SECS_IN_DAY / (FIFTEEN_MINUTES_VALUES.length - 1);
+            int secsInFiveMinutes = SECS_IN_DAY / (FIVE_MINUTES_VALUES.length - 1);
             for (int i = 0; i < THRE_HOURS_VALUES.length; i++) {
-                deviders.add(new Devider(SECS_IN_TIME / (THRE_HOURS_VALUES.length-1) * i, THREE_HOURS, THRE_HOURS_VALUES[i]));
+                deviders.add(new Devider(secsInThreeHours * i + (extraStartSecs), THREE_HOURS, THRE_HOURS_VALUES[i]));
             }
             for (int i = 0; i < ONE_HOUR_VALUES.length; i++) {
-                deviders.add(new Devider(SECS_IN_TIME / (ONE_HOUR_VALUES.length-1) * i, ONE_HOUR, ONE_HOUR_VALUES[i]));
+                deviders.add(new Devider(secsInOneHour * i + (extraStartSecs), ONE_HOUR, ONE_HOUR_VALUES[i]));
             }
             for (int i = 0; i < HALF_HOUR_VALUES.length; i++) {
-                deviders.add(new Devider(SECS_IN_TIME / (HALF_HOUR_VALUES.length-1) * i, HALF_HOUR, HALF_HOUR_VALUES[i]));
+                deviders.add(new Devider(secsInHalfHour * i + (extraStartSecs), HALF_HOUR, HALF_HOUR_VALUES[i]));
             }
             for (int i = 0; i < FIFTEEN_MINUTES_VALUES.length; i++) {
-                deviders.add(new Devider(SECS_IN_TIME / (FIFTEEN_MINUTES_VALUES.length-1) * i, FIFTEEN_MINUTES, FIFTEEN_MINUTES_VALUES[i]));
+                deviders.add(new Devider(secsInFifteenMinutes * i + (extraStartSecs), FIFTEEN_MINUTES, FIFTEEN_MINUTES_VALUES[i]));
             }
             for (int i = 0; i < FIVE_MINUTES_VALUES.length; i++) {
-                deviders.add(new Devider(SECS_IN_TIME / (FIVE_MINUTES_VALUES.length-1) * i, FIVE_MINUTES, FIVE_MINUTES_VALUES[i]));
+                deviders.add(new Devider(secsInFiveMinutes * i + (extraStartSecs), FIVE_MINUTES, FIVE_MINUTES_VALUES[i]));
+            }
+            if (extraStartSecs > 0) {
+                if (extraStartSecs > secsInThreeHours) {
+                    for (int i = 0; i < (extraStartSecs / secsInThreeHours); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(extraStartSecs - secsInThreeHours * i, THREE_HOURS, THRE_HOURS_VALUES[THRE_HOURS_VALUES.length - i - 1]));
+                        }
+                    }
+                }
+                if (extraStartSecs > secsInOneHour) {
+                    for (int i = 0; i < (extraStartSecs / secsInOneHour); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(extraStartSecs - secsInOneHour * i, ONE_HOUR, ONE_HOUR_VALUES[ONE_HOUR_VALUES.length - i - 1]));
+                        }
+                    }
+                }
+                if (extraStartSecs > secsInHalfHour) {
+                    for (int i = 0; i < (extraStartSecs / secsInHalfHour); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(extraStartSecs - secsInHalfHour * i, HALF_HOUR, HALF_HOUR_VALUES[HALF_HOUR_VALUES.length - i - 1]));
+                        }
+                    }
+                }
+                if (extraStartSecs > secsInFifteenMinutes) {
+                    for (int i = 0; i < (extraStartSecs / secsInFifteenMinutes); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(extraStartSecs - secsInFifteenMinutes * i, FIFTEEN_MINUTES, FIFTEEN_MINUTES_VALUES[FIFTEEN_MINUTES_VALUES.length - i - 1]));
+                        }
+                    }
+                }
+                if (extraStartSecs > secsInFiveMinutes) {
+                    for (int i = 0; i < (extraStartSecs / secsInFiveMinutes); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(extraStartSecs - secsInFiveMinutes * i, FIVE_MINUTES, FIVE_MINUTES_VALUES[FIVE_MINUTES_VALUES.length - i - 1]));
+                        }
+                    }
+                }
             }
         }
 
