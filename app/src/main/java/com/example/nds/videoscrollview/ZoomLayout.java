@@ -554,6 +554,43 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
                     }
                 }
             }
+            if (extraEndSecs > 0) {
+                if (extraEndSecs > secsInThreeHours) {
+                    for (int i = 0; i < (extraEndSecs / secsInThreeHours); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(SECS_IN_DAY + (extraStartSecs) + secsInThreeHours * i, THREE_HOURS, THRE_HOURS_VALUES[i]));
+                        }
+                    }
+                }
+                if (extraEndSecs > secsInOneHour) {
+                    for (int i = 0; i < (extraEndSecs / secsInOneHour); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(SECS_IN_DAY + (extraStartSecs) + secsInOneHour * i, ONE_HOUR, ONE_HOUR_VALUES[i]));
+                        }
+                    }
+                }
+                if (extraEndSecs > secsInHalfHour) {
+                    for (int i = 0; i < (extraEndSecs / secsInHalfHour); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(SECS_IN_DAY + (extraStartSecs) + secsInHalfHour * i, HALF_HOUR, HALF_HOUR_VALUES[i]));
+                        }
+                    }
+                }
+                if (extraEndSecs > secsInFifteenMinutes) {
+                    for (int i = 0; i < (extraEndSecs / secsInFifteenMinutes); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(SECS_IN_DAY + (extraStartSecs) + secsInFifteenMinutes * i, FIFTEEN_MINUTES, FIFTEEN_MINUTES_VALUES[i]));
+                        }
+                    }
+                }
+                if (extraEndSecs > secsInFiveMinutes) {
+                    for (int i = 0; i < (extraEndSecs / secsInFiveMinutes); i++) {
+                        if (i > 0) {
+                            deviders.add(new Devider(SECS_IN_DAY + (extraStartSecs) + secsInFiveMinutes * i, FIVE_MINUTES, FIVE_MINUTES_VALUES[i]));
+                        }
+                    }
+                }
+            }
         }
 
         public void checkVisebility(float startSec, float endSec) {
