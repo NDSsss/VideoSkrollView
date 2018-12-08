@@ -125,7 +125,7 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
     private static final float MIN_ZOOM = 1f;
     private static final float MAX_ZOOM = 55.0f;
     float max;
-    private int extraStartSecs = SECS_IN_DAY / 24 * 3, extraEndSecs = SECS_IN_DAY / 24 * 3;
+    private int extraStartSecs = 0, extraEndSecs = 0;
     private float secsInView = SECS_IN_DAY + extraEndSecs + extraStartSecs;
     private int THREE_HOURS_LEVEL = (int) secsInView;
     private int ONE_HOUR_LEVEL = THREE_HOURS_LEVEL / 3;
@@ -188,6 +188,36 @@ public class ZoomLayout extends FrameLayout implements ScaleGestureDetector.OnSc
 
     public void setISetScaleListener(IZoomCallback setScaleListener) {
         mSetScale = setScaleListener;
+    }
+
+    public int getExtraStartSecs() {
+        return extraStartSecs;
+    }
+
+    public void setExtraStartSecs(int extraStartSecs) {
+        this.extraStartSecs = extraStartSecs;
+        secsInView = SECS_IN_DAY + extraEndSecs + extraStartSecs;
+        THREE_HOURS_LEVEL = (int) secsInView;
+        ONE_HOUR_LEVEL = THREE_HOURS_LEVEL / 3;
+        HALF_HOUR_LEVEL = ONE_HOUR_LEVEL / 2;
+        FIFTEEN_MINUTES_LEVEL = HALF_HOUR_LEVEL / 2;
+        FIVE_MINUTES_LEVEL = FIFTEEN_MINUTES_LEVEL / 3;
+        threezoom = new ThreeHoursZoom();
+    }
+
+    public int getExtraEndSecs() {
+        return extraEndSecs;
+    }
+
+    public void setExtraEndSecs(int extraEndSecs) {
+        this.extraEndSecs = extraEndSecs;
+        secsInView = SECS_IN_DAY + extraEndSecs + extraStartSecs;
+        THREE_HOURS_LEVEL = (int) secsInView;
+        ONE_HOUR_LEVEL = THREE_HOURS_LEVEL / 3;
+        HALF_HOUR_LEVEL = ONE_HOUR_LEVEL / 2;
+        FIFTEEN_MINUTES_LEVEL = HALF_HOUR_LEVEL / 2;
+        FIVE_MINUTES_LEVEL = FIFTEEN_MINUTES_LEVEL / 3;
+        threezoom = new ThreeHoursZoom();
     }
 
     public void setRedLi(ArrayList<Integer> redSeconds) {

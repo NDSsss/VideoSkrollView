@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity implements ZoomLayout.IZoomC
         for(int i =0; i<redSeconds.length;i++){
             redSecondsList.add(redSeconds[i]);
         }
+        zoomLayout.setExtraStartSecs(ZoomLayout.SECS_IN_DAY/24*6);
+        zoomLayout.setExtraEndSecs(ZoomLayout.SECS_IN_DAY/24*3);
         et1 = (TextView)findViewById(R.id.tv_info);
     }
 
